@@ -32,6 +32,8 @@ import com.streamxhub.streamx.common.enums.ApplicationType;
 import com.streamxhub.streamx.common.enums.DevelopmentMode;
 import com.streamxhub.streamx.common.enums.ExecutionMode;
 import com.streamxhub.streamx.common.enums.ResolveOrder;
+import com.streamxhub.streamx.common.enums.StorageType;
+import com.streamxhub.streamx.common.fs.HdfsOperator;
 import com.streamxhub.streamx.common.util.DeflaterUtils;
 import com.streamxhub.streamx.common.util.ExceptionUtils;
 import com.streamxhub.streamx.common.util.ThreadUtils;
@@ -158,19 +160,19 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
     private ApplicationBackUpService backUpService;
 
     @Autowired
-    private FlinkEnvService flinkEnvService;
+    private ApplicationConfigService configService;
 
     @Autowired
-    private ApplicationConfigService configService;
+    private ApplicationLogService applicationLogService;
+
+    @Autowired
+    private FlinkEnvService flinkEnvService;
 
     @Autowired
     private FlinkSqlService flinkSqlService;
 
     @Autowired
     private SavePointService savePointService;
-
-    @Autowired
-    private ApplicationLogService applicationLogService;
 
     @Autowired
     private EffectiveService effectiveService;
@@ -367,7 +369,10 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
             //6) 删除savepoint
             savePointService.removeApp(application);
 
-            //7) 删除 app
+            //7) 删除 BuildPipeline
+            appBuildPipeService.removeApp(application.getId());
+
+            //8) 删除 app
             removeApp(application);
 
             if (isKubernetesApp(paramApp)) {
@@ -422,6 +427,12 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
         Long appId = application.getId();
         removeById(appId);
         application.getFsOperator().delete(application.getWorkspace().APP_WORKSPACE().concat("/").concat(appId.toString()));
+        try {
+            //曾经设置过yarn-application类型,尝试删除,不留后患.
+            HdfsOperator.delete(Workspace.of(StorageType.HDFS).APP_WORKSPACE().concat("/").concat(appId.toString()));
+        } catch (Exception e) {
+            //skip
+        }
     }
 
     @Override
@@ -809,6 +820,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
                 }
             }
         }
+
         if (ExecutionMode.YARN_SESSION.equals(application.getExecutionModeEnum())) {
             if (!application.getHotParamsMap().isEmpty()) {
                 if (application.getHotParamsMap().containsKey(ConfigConst.KEY_YARN_APP_ID())) {
@@ -879,6 +891,8 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
 
                 Map<String, Object> extraParameter = new HashMap<>();
 
+                Map<String, Object> optionMap = application.getOptionMap();
+
                 if (ExecutionMode.isRemoteMode(application.getExecutionModeEnum())) {
                     FlinkCluster cluster = flinkClusterService.getById(application.getFlinkClusterId());
                     assert cluster != null;
@@ -886,8 +900,12 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
                     extraParameter.put(RestOptions.ADDRESS.key(), activeAddress.getHost());
                     extraParameter.put(RestOptions.PORT.key(), activeAddress.getPort());
                 }
-                if (ExecutionMode.isYarnSessionMode(application.getExecutionModeEnum())) {
-                    if (!application.getHotParamsMap().isEmpty()) {
+
+                if (ExecutionMode.isYarnMode(application.getExecutionModeEnum())) {
+                    String yarnQueue = (String) application.getHotParamsMap().get(ConfigConst.KEY_YARN_APP_QUEUE());
+                    optionMap.put(ConfigConst.KEY_YARN_APP_QUEUE(), yarnQueue);
+
+                    if (ExecutionMode.YARN_SESSION.equals(application.getExecutionModeEnum())) {
                         String yarnSessionClusterId = (String) application.getHotParamsMap().get(ConfigConst.KEY_YARN_APP_ID());
                         assert yarnSessionClusterId != null;
                         extraParameter.put(ConfigConst.KEY_YARN_APP_ID(), yarnSessionClusterId);
@@ -1045,15 +1063,9 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
                 throw new UnsupportedOperationException("Unsupported...");
             }
 
-            Map<String, Object> optionMap = application.getOptionMap();
-            if (ExecutionMode.YARN_APPLICATION.equals(application.getExecutionModeEnum())
-                    || ExecutionMode.YARN_SESSION.equals(application.getExecutionModeEnum())) {
-                optionMap.putAll(application.getHotParamsMap());
-            }
-
             String[] dynamicOption = CommonUtils.notEmpty(application.getDynamicOptions()) ? application.getDynamicOptions().split("\\s+") : new String[0];
 
-            Map<String, Object> extraParameter = new HashMap<>();
+            Map<String, Object> extraParameter = new HashMap<>(0);
             extraParameter.put(ConfigConst.KEY_JOB_ID(), application.getId());
             extraParameter.put(PipelineOptions.JARS.key(), flinkUserJar);
 
@@ -1067,6 +1079,12 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
                 URI activeAddress = cluster.getActiveAddress();
                 extraParameter.put(RestOptions.ADDRESS.key(), activeAddress.getHost());
                 extraParameter.put(RestOptions.PORT.key(), activeAddress.getPort());
+            }
+
+            if (ExecutionMode.YARN_SESSION.equals(application.getExecutionModeEnum())) {
+                String yarnSessionClusterId = (String) application.getHotParamsMap().get(ConfigConst.KEY_YARN_APP_ID());
+                assert yarnSessionClusterId != null;
+                extraParameter.put(ConfigConst.KEY_YARN_APP_ID(), yarnSessionClusterId);
             }
 
             if (application.isFlinkSqlJob()) {
@@ -1099,7 +1117,7 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
                     application.getApplicationType(),
                     getSavePointed(appParam),
                     appParam.getFlameGraph() ? getFlameGraph(application) : null,
-                    optionMap,
+                    application.getOptionMap(),
                     dynamicOption,
                     application.getArgs(),
                     buildPipeline.getBuildResult(),
@@ -1137,12 +1155,10 @@ public class ApplicationServiceImpl extends ServiceImpl<ApplicationMapper, Appli
             updateById(application);
 
             //2) 启动完成将任务加入到监控中...
-            // 更改操作状态...x
             if (isKubernetesApp(application)) {
                 k8sFlinkTrkMonitor.trackingJob(toTrkId(application));
             } else {
                 FlinkTrackingTask.setOptionState(appParam.getId(), OptionState.STARTING);
-                // 加入到跟踪监控中...
                 FlinkTrackingTask.addTracking(application);
             }
 
