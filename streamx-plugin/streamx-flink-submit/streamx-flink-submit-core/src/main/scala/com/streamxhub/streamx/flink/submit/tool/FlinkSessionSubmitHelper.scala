@@ -62,13 +62,15 @@ object FlinkSessionSubmitHelper extends Logger {
         .create()
         .addBinaryBody("jarfile", flinkJobJar, ContentType.create("application/java-archive"), flinkJobJar.getName)
         .build()
-      ).execute.returnContent().asString(StandardCharsets.UTF_8)
+      ).execute
+      .returnContent()
+      .asString(StandardCharsets.UTF_8)
 
     val jarUploadResponse = Try(parse(uploadResult)) match {
       case Success(ok) =>
         JarUploadResponse(
-          (ok \ "filename").extractOpt[String].getOrElse(null),
-          (ok \ "status").extractOpt[String].getOrElse(null)
+          (ok \ "filename").extractOpt[String].orNull,
+          (ok \ "status").extractOpt[String].orNull
         )
       case Failure(_) => null
     }
@@ -85,7 +87,7 @@ object FlinkSessionSubmitHelper extends Logger {
       .execute.returnContent().asString(StandardCharsets.UTF_8)
 
     Try(parse(resp)) match {
-      case Success(ok) => (ok \ "jobid").extractOpt[String].getOrElse(null)
+      case Success(ok) => (ok \ "jobid").extractOpt[String].orNull
       case Failure(_) => null
     }
   }
