@@ -554,7 +554,7 @@
           <template v-if="appBuildDetail.pipeline != null">
             <a-row>
               <a-progress
-                v-if="appBuildDetail.pipeline.isErr"
+                v-if="appBuildDetail.pipeline.hasError"
                 :percent="appBuildDetail.pipeline.percent"
                 status="exception"/>
               <a-progress
@@ -698,14 +698,14 @@
             :visible="appBuildErrorLogDrawerVisual"
             @close="closeBuildErrorLogDrawer">
             <template
-              v-if="appBuildDetail.pipeline != null && (appBuildDetail.pipeline.errSummary != null || appBuildDetail.pipeline.errStack != null)">
+              v-if="appBuildDetail.pipeline != null && appBuildDetail.pipeline.hasError">
               <h3>Error Summary</h3>
               <br/>
-              <p>{{ appBuildDetail.pipeline.errSummary }}</p>
+              <p>{{ appBuildDetail.pipeline.errorSummary }}</p>
               <a-divider/>
               <h3>Error Stack</h3>
               <br/>
-              <pre style="font-size: 12px">{{ appBuildDetail.pipeline.errStack }}</pre>
+              <pre style="font-size: 12px">{{ appBuildDetail.pipeline.errorStack }}</pre>
             </template>
             <template v-else>
               <a-empty/>
@@ -714,6 +714,7 @@
 
           <!-- bottom tools -->
           <div
+            v-if="appBuildDetail.pipeline != null && appBuildDetail.pipeline.hasError"
             :style="{
               position: 'absolute',
               bottom: 0,
@@ -908,6 +909,19 @@
               style="color:darkgrey"> trigger savePoint before taking stoping </span>
           </a-form-item>
           <a-form-item
+              label="Custom SavePoint"
+              style="margin-bottom: 10px"
+              :label-col="{lg: {span: 7}, sm: {span: 7}}"
+              :wrapper-col="{lg: {span: 16}, sm: {span: 4} }"
+              v-show="savePoint">
+            <a-input
+                type="text"
+                placeholder="Entry the custom savepoint path"
+                v-model="customSavepoint"
+                v-decorator="['customSavepoint']"/>
+            <div style="color:darkgrey">cancel job with savepoint path.</div>
+          </a-form-item>
+          <a-form-item
             label="Drain"
             :label-col="{lg: {span: 7}, sm: {span: 7}}"
             :wrapper-col="{lg: {span: 16}, sm: {span: 4} }">
@@ -920,19 +934,6 @@
             <span
               class="conf-switch"
               style="color:darkgrey"> Send max watermark before stoping</span>
-          </a-form-item>
-          <a-form-item
-            label="Custom SavePoint"
-            style="margin-bottom: 10px"
-            :label-col="{lg: {span: 7}, sm: {span: 7}}"
-            :wrapper-col="{lg: {span: 16}, sm: {span: 4} }"
-            v-show="savePoint">
-            <a-input
-              type="text"
-              placeholder="Entry the custom savepoint path"
-              v-model="customSavepoint"
-              v-decorator="['customSavepoint']"/>
-            <div style="color:darkgrey">Custom savepoint path is not supported on YARN mode.</div>
           </a-form-item>
         </a-form>
 
@@ -1043,7 +1044,19 @@
 import Ellipsis from '@/components/Ellipsis'
 import State from './State'
 import {mapActions} from 'vuex'
-import {cancel, clean, dashboard, downLog, list, mapping, remove, revoke, start, yarn} from '@api/application'
+import {
+  cancel,
+  clean,
+  dashboard,
+  downLog,
+  list,
+  mapping,
+  remove,
+  revoke,
+  start,
+  yarn,
+  verifySchema
+} from '@api/application'
 import {history, latest} from '@api/savepoint'
 import {flamegraph} from '@api/metrics'
 import {weburl} from '@api/setting'
@@ -1372,16 +1385,17 @@ export default {
 
     openBuildProgressDetailDrawer(app) {
       this.appBuildDrawerVisual = true
-      clearInterval(this.appBuildDtlReqTimer)
+      if (this.appBuildDtlReqTimer) {
+        clearInterval(this.appBuildDtlReqTimer)
+      }
       this.handleFetchBuildDetail(app)
-      this.appBuildDtlReqTimer = window.setInterval(
-          () => this.handleFetchBuildDetail(app),
-          500)
+      this.appBuildDtlReqTimer = window.setInterval(() => this.handleFetchBuildDetail(app), 500)
     },
 
     closeBuildProgressDrawer() {
       this.appBuildDrawerVisual = false
       clearInterval(this.appBuildDtlReqTimer)
+      this.appBuildDtlReqTimer = null
       this.appBuildDetail.pipeline = null
       this.appBuildDetail.docker = null
     },
@@ -1625,7 +1639,15 @@ export default {
                   icon: 'error',
                   width: this.exceptionPropWidth(),
                   html: '<pre class="propException"> startup failed, ' + resp.message.replaceAll(/\[StreamX]/g, '') + '</pre>',
-                  focusConfirm: false
+                  showCancelButton: true,
+                  confirmButtonColor: '#55BDDDFF',
+                  confirmButtonText: 'Detail',
+                  cancelButtonText: 'Close'
+                }).then((isConfirm) =>{
+                  if (isConfirm.value) {
+                    this.SetAppId(id)
+                    this.$router.push({'path': '/flink/app/detail'})
+                  }
                 })
               }
             })
@@ -1652,26 +1674,49 @@ export default {
     },
 
     handleStopOk() {
+      const customSavePoint = this.customSavepoint
       const id = this.application.id
       const savePointed = this.savePoint
       const drain = this.drain
-      const customSavePoint = this.customSavepoint
       this.optionApps.stoping.set(id, new Date().getTime())
       this.handleMapUpdate('stoping')
       this.handleStopCancel()
 
+      const stopReq = {
+        id: id,
+        savePointed: savePointed,
+        drain: drain,
+        savePoint: customSavePoint
+      }
+
+      if ( customSavePoint != null ) {
+        verifySchema({
+          'path': customSavePoint
+        }).then(resp => {
+          if (resp.data === false) {
+            this.$swal.fire(
+                'Failed',
+                'custom savePoint path is invalid, ' + resp.message,
+                'error'
+            )
+          } else {
+            this.handleStopAction(stopReq)
+          }
+        })
+      } else {
+        this.handleStopAction(stopReq)
+      }
+
+    },
+
+    handleStopAction(stopReq) {
       this.$swal.fire({
         icon: 'success',
         title: 'The current job is canceling',
         showConfirmButton: false,
         timer: 2000
       }).then((result) => {
-        cancel({
-          id: id,
-          savePointed: savePointed,
-          drain: drain,
-          savePoint: customSavePoint
-        }).then((resp) => {
+        cancel(stopReq).then((resp) => {
           if (resp.status === 'error') {
             this.$swal.fire(
                 'Failed',
@@ -1876,7 +1921,7 @@ export default {
         // yarn-per-job|yarn-session|yarn-application
         const executionMode = params['executionMode']
         if (executionMode === 1) {
-          activeURL({id: params.id}).then((resp) => {
+          activeURL({id: params.flinkClusterId}).then((resp) => {
             const url = resp.data + '/#/job/' + params.jobId + '/overview'
             window.open(url)
           })
@@ -1902,17 +1947,9 @@ export default {
     handleEdit(app) {
       this.SetAppId(app.id)
       if (app.appType === 1) {
+        // jobType( 1 custom code 2: flinkSQL)
         this.$router.push({'path': '/flink/app/edit_streamx'})
-        if (app.jobType === 1) {
-          if (app.resourceForm === 1) {
-            this.$router.push({'path': '/flink/app/edit_streamx'})
-          } else {
-            this.$router.push({'path': '/flink/app/edit_flink'})
-          }
-        } else {
-          this.$router.push({'path': '/flink/app/edit_streamx'})
-        }
-      } else {
+      } else if (app.appType === 2) { //Apache Flink
         this.$router.push({'path': '/flink/app/edit_flink'})
       }
     },

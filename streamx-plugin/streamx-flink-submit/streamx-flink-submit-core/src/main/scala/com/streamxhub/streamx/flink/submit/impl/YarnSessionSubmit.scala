@@ -44,7 +44,7 @@ object YarnSessionSubmit extends YarnSubmitTrait {
   override def setConfig(submitRequest: SubmitRequest, flinkConfig: Configuration): Unit = {
     flinkConfig
       .safeSet(DeploymentOptions.TARGET, YarnDeploymentTarget.SESSION.getName)
-      .safeSet(YarnConfigOptions.APPLICATION_ID, submitRequest.option.get(KEY_YARN_APP_ID).toString)
+      .safeSet(YarnConfigOptions.APPLICATION_ID, submitRequest.extraParameter.get(KEY_YARN_APP_ID).toString)
 
     logInfo(
       s"""
@@ -106,13 +106,7 @@ object YarnSessionSubmit extends YarnSubmitTrait {
       clusterDescriptor = yarnClusterDescriptor._2
       client = clusterDescriptor.retrieve(yarnClusterDescriptor._1).getClusterClient
       val jobID = JobID.fromHexString(stopRequest.jobId)
-      val savePointDir = stopRequest.customSavePointPath
-      val actionResult = (stopRequest.withSavePoint, stopRequest.withDrain) match {
-        case (true, true) if savePointDir.nonEmpty => client.stopWithSavepoint(jobID, true, savePointDir).get()
-        case (true, false) if savePointDir.nonEmpty => client.cancelWithSavepoint(jobID, savePointDir).get()
-        case _ => client.cancel(jobID).get()
-          ""
-      }
+      val actionResult = cancelJob(stopRequest, jobID, client)
       StopResponse(actionResult)
     } catch {
       case e: Exception =>
@@ -132,4 +126,5 @@ object YarnSessionSubmit extends YarnSubmitTrait {
     val clusterDescriptor = clientFactory.createClusterDescriptor(flinkConfig).asInstanceOf[YarnClusterDescriptor]
     (yarnClusterId, clusterDescriptor)
   }
+
 }

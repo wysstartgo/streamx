@@ -77,13 +77,7 @@ object RemoteSubmit extends FlinkSubmitTrait {
     try {
       client = standAloneDescriptor._2.retrieve(standAloneDescriptor._1).getClusterClient
       val jobID = JobID.fromHexString(stopRequest.jobId)
-      val savePointDir = stopRequest.customSavePointPath
-      val actionResult = (stopRequest.withSavePoint, stopRequest.withDrain) match {
-        case (true, true) if savePointDir.nonEmpty => client.stopWithSavepoint(jobID, true, savePointDir).get()
-        case (true, false) if savePointDir.nonEmpty => client.cancelWithSavepoint(jobID, savePointDir).get()
-        case _ => client.cancel(jobID).get()
-          ""
-      }
+      val actionResult = cancelJob(stopRequest, jobID, client)
       StopResponse(actionResult)
     } catch {
       case e: Exception =>
@@ -106,14 +100,16 @@ object RemoteSubmit extends FlinkSubmitTrait {
     var client: ClusterClient[StandaloneClusterId] = null
     try {
       val standAloneDescriptor = getStandAloneClusterDescriptor(flinkConfig)
+      val yarnClusterId: StandaloneClusterId = standAloneDescriptor._1
       clusterDescriptor = standAloneDescriptor._2
-      client = clusterDescriptor.retrieve(standAloneDescriptor._1).getClusterClient
-      logInfo(s"standalone submit WebInterfaceURL ${client.getWebInterfaceURL}")
+
+      client = clusterDescriptor.retrieve(yarnClusterId).getClusterClient
       val jobId = FlinkSessionSubmitHelper.submitViaRestApi(client.getWebInterfaceURL, fatJar, flinkConfig)
-      SubmitResponse(jobId, flinkConfig.toMap, jobId)
+      logInfo(s"${submitRequest.executionMode} mode submit by restApi, WebInterfaceURL ${client.getWebInterfaceURL}, jobId: $jobId")
+      SubmitResponse(null, flinkConfig.toMap, jobId)
     } catch {
       case e: Exception =>
-        logError(s"submit flink job fail in standalone mode")
+        logError(s"${submitRequest.executionMode} mode submit by restApi fail.")
         e.printStackTrace()
         throw e
     }
@@ -135,11 +131,12 @@ object RemoteSubmit extends FlinkSubmitTrait {
       val jobGraph = packageProgramJobGraph._2
       client = clusterDescriptor.retrieve(standAloneDescriptor._1).getClusterClient
       val jobId = client.submitJob(jobGraph).get().toString
-      val result = SubmitResponse(jobId, flinkConfig.toMap, jobId)
+      logInfo(s"${submitRequest.executionMode} mode submit by jobGraph, WebInterfaceURL ${client.getWebInterfaceURL}, jobId: $jobId")
+      val result = SubmitResponse(null, flinkConfig.toMap, jobId)
       result
     } catch {
       case e: Exception =>
-        logError(s"submit flink job fail in ${submitRequest.executionMode} mode")
+        logError(s"${submitRequest.executionMode} mode submit by jobGraph fail.")
         e.printStackTrace()
         throw e
     } finally {

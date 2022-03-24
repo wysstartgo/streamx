@@ -2275,6 +2275,7 @@ export default {
         sqlId: this.defaultFlinkSqlId || null,
         flinkSql: this.controller.flinkSql.value,
         config: config,
+        format: this.isSetConfig ? 1 : null,
         versionId: values.versionId,
         jobName: values.jobName,
         args: values.args || null,
@@ -2712,7 +2713,7 @@ export default {
         if (this.app.jobType === 2) {
           this.flinkSql.sql = this.app.flinkSql || null
           this.flinkSql.dependency = this.app.dependency || null
-          initFlinkSqlEditor(this,this.controller.flinkSql.value || Base64.decode(this.flinkSql.sql))
+          initFlinkSqlEditor(this, this.controller.flinkSql.value || Base64.decode(this.flinkSql.sql))
           this.handleInitDependency()
         }
         this.selectedHistoryUploadJars = []
