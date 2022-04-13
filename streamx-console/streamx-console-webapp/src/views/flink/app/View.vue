@@ -522,6 +522,7 @@
               title="Are you sure delete this job ?"
               cancel-text="No"
               ok-text="Yes"
+              v-permit="'app:delete'"
               @confirm="handleDelete(record)">
               <a-button
                 type="danger"
@@ -909,16 +910,16 @@
               style="color:darkgrey"> trigger savePoint before taking stoping </span>
           </a-form-item>
           <a-form-item
-              label="Custom SavePoint"
-              style="margin-bottom: 10px"
-              :label-col="{lg: {span: 7}, sm: {span: 7}}"
-              :wrapper-col="{lg: {span: 16}, sm: {span: 4} }"
-              v-show="savePoint">
+            label="Custom SavePoint"
+            style="margin-bottom: 10px"
+            :label-col="{lg: {span: 7}, sm: {span: 7}}"
+            :wrapper-col="{lg: {span: 16}, sm: {span: 4} }"
+            v-show="savePoint">
             <a-input
-                type="text"
-                placeholder="Entry the custom savepoint path"
-                v-model="customSavepoint"
-                v-decorator="['customSavepoint']"/>
+              type="text"
+              placeholder="Entry the custom savepoint path"
+              v-model="customSavepoint"
+              v-decorator="['customSavepoint']"/>
             <div style="color:darkgrey">cancel job with savepoint path.</div>
           </a-form-item>
           <a-form-item
