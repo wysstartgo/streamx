@@ -105,6 +105,7 @@ trait FlinkSubmitTrait extends Logger {
       .safeSet(CoreOptions.CLASSLOADER_RESOLVE_ORDER, submitRequest.resolveOrder.getName)
       .safeSet(ApplicationConfiguration.APPLICATION_MAIN_CLASS, submitRequest.appMain)
       .safeSet(ApplicationConfiguration.APPLICATION_ARGS, extractProgramArgs(submitRequest))
+      .safeSet(PipelineOptionsInternal.PIPELINE_FIXED_JOB_ID, new JobID().toHexString)
 
     val flinkDefaultConfiguration = getFlinkDefaultConfiguration(submitRequest.flinkVersion.flinkHome)
     //state.checkpoints.num-retained
@@ -392,16 +393,19 @@ trait FlinkSubmitTrait extends Logger {
         if (StringUtils.isNotEmpty(stopRequest.customSavePointPath)) {
           stopRequest.customSavePointPath
         } else {
-          getOptionFromDefaultFlinkConfig[String](
+          val configDir = getOptionFromDefaultFlinkConfig[String](
             stopRequest.flinkVersion.flinkHome,
             ConfigOptions.key(CheckpointingOptions.SAVEPOINT_DIRECTORY.key())
               .stringType()
               .defaultValue {
                 if (stopRequest.executionMode == ExecutionMode.YARN_APPLICATION) {
                   Workspace.remote.APP_SAVEPOINTS
-                } else throw new FlinkException(s"[StreamX] executionMode: ${stopRequest.executionMode.getName}, savePoint path is null or invalid.")
+                } else null
               }
           )
+          if (StringUtils.isEmpty(configDir)) {
+            throw new FlinkException(s"[StreamX] executionMode: ${stopRequest.executionMode.getName}, savePoint path is null or invalid.")
+          } else configDir
         }
       }
     }
