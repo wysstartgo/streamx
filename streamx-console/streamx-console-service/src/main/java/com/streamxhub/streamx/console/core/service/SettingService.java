@@ -19,9 +19,10 @@
 
 package com.streamxhub.streamx.console.core.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.streamxhub.streamx.console.core.entity.SenderEmail;
 import com.streamxhub.streamx.console.core.entity.Setting;
+
+import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
  * @author benjobs
@@ -44,6 +45,8 @@ public interface SettingService extends IService<Setting> {
     String KEY_DOCKER_REGISTER_ADDRESS = "docker.register.address";
     String KEY_DOCKER_REGISTER_USER = "docker.register.user";
     String KEY_DOCKER_REGISTER_PASSWORD = "docker.register.password";
+
+    String KEY_DOCKER_REGISTER_NAMESPACE = "docker.register.namespace";
 
     /**
      * @param key
@@ -73,4 +76,5 @@ public interface SettingService extends IService<Setting> {
 
     String getDockerRegisterPassword();
 
+    String getDockerRegisterNamespace();
 }

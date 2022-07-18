@@ -6,11 +6,11 @@
 
     <parent>
         <groupId>com.streamxhub.streamx</groupId>
-        <artifactId>streamx-flink-connector-elasticseach</artifactId>
-        <version>1.2.3</version>
+        <artifactId>streamx-flink-connector-elasticsearch</artifactId>
+        <version>1.2.4</version>
     </parent>
 
-    <artifactId>streamx-flink-connector-elasticsearch6</artifactId>
+    <artifactId>streamx-flink-connector-elasticsearch6_${scala.binary.version}</artifactId>
     <name>StreamX : Flink Connector Elasticsearch6</name>
 
     <properties>
@@ -21,7 +21,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-connector-elasticsearch6_${scala.binary.version}</artifactId>
+            <artifactId>flink-connector-elasticsearch6${scala.binary.flink.version}</artifactId>
             <version>${flink.version}</version>
         </dependency>
     </dependencies>

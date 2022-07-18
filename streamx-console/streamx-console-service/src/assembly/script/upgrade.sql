@@ -1,6 +1,6 @@
 -- ------------------------------------- version: 1.2.1 START ---------------------------------------
+SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
-COMMIT;
 
 BEGIN;
 -- ALTER TABLE `t_flink_app` ADD COLUMN `K8S_HADOOP_INTEGRATION` tinyint(1) default 0 AFTER `K8S_TM_POD_TEMPLATE`;
@@ -14,7 +14,6 @@ BEGIN;
 update `t_flink_app` set `RESOURCE_FROM` = 1 where `JOB_TYPE` = 1;
 
 -- ALTER TABLE `t_user_role` ADD COLUMN `ID` bigint NOT NULL primary key AUTO_INCREMENT FIRST;
-COMMIT;
 -- ----------------------------
 -- Table of t_app_build_pipe
 -- ----------------------------
@@ -48,7 +47,6 @@ UNIQUE KEY `UN_INX` (`ROLE_ID`,`MENU_ID`) USING BTREE
 -- ----------------------------
 -- Records of t_role_menu
 -- ----------------------------
-BEGIN;
 INSERT INTO `t_role_menu` VALUES (1, 1, 1);
 INSERT INTO `t_role_menu` VALUES (2, 1, 2);
 INSERT INTO `t_role_menu` VALUES (3, 1, 3);
@@ -104,19 +102,23 @@ INSERT INTO `t_role_menu` VALUES (52, 2, 31);
 INSERT INTO `t_role_menu` VALUES (53, 2, 32);
 INSERT INTO `t_role_menu` VALUES (54, 2, 33);
 INSERT INTO `t_role_menu` VALUES (55, 2, 34);
+
 COMMIT;
+
 SET FOREIGN_KEY_CHECKS = 1;
 -- ------------------------------------- version: 1.2.1 END ---------------------------------------
 
 
 -- ------------------------------------- version: 1.2.2 START ---------------------------------------
+SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+BEGIN;
 -- menu
 update `t_menu` set MENU_NAME='launch',PERMS='app:launch' where MENU_NAME='deploy';
-
 -- change default value
 UPDATE `t_setting` SET `KEY`='streamx.maven.central.repository' WHERE `KEY` = 'maven.central.repository';
+COMMIT;
 
 -- rename column
 ALTER TABLE `t_flink_project`
@@ -194,6 +196,7 @@ UPDATE t_user set USER_ID=USER_ID+99999;
 UPDATE t_user_role set ID=ID+99999,ROLE_ID=ROLE_ID+99999,USER_ID=USER_ID+99999;
 UPDATE t_flink_app set USER_ID = USER_ID+99999;
 COMMIT;
+
 -- ----------------------------
 -- Table of t_flink_cluster
 -- ----------------------------
@@ -207,16 +210,20 @@ CREATE TABLE `t_flink_cluster`(
 PRIMARY KEY (`ID`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=100000 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-SET FOREIGN_KEY_CHECKS = 1;
 
 BEGIN;
--- INSERT INTO `t_role_menu` VALUES (100055, 100001, 100013);
--- INSERT INTO `t_role_menu` VALUES (100056, 100001, 100015);
+INSERT INTO `t_menu` VALUES (100037, 100013, 'Add Cluster', '/flink/setting/add_cluster', 'flink/setting/AddCluster', 'cluster:create', '', '0', '0', null, NOW(), NOW());
+INSERT INTO `t_menu` VALUES (100038, 100013, 'Edit Cluster', '/flink/setting/edit_cluster', 'flink/setting/EditCluster', 'cluster:update', '', '0', '0', null, NOW(), NOW());
 COMMIT;
+
+SET FOREIGN_KEY_CHECKS = 1;
 -- ------------------------------------- version: 1.2.2 END ---------------------------------------
 
-
 -- ------------------------------------- version: 1.2.3 START ---------------------------------------
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+BEGIN;
 
 -- ----------------------------
 -- Table of t_access_token definition
@@ -224,19 +231,112 @@ COMMIT;
 DROP TABLE IF EXISTS `t_access_token`;
 CREATE TABLE `t_access_token` (
 `ID` int NOT NULL AUTO_INCREMENT COMMENT 'key',
-`USERNAME` varchar(256) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'USER_NAME',
+`USER_ID`     bigint,
 `TOKEN` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'TOKEN',
 `EXPIRE_TIME` datetime DEFAULT NULL COMMENT '过期时间',
 `DESCRIPTION` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '使用场景描述',
+`STATUS` tinyint DEFAULT NULL COMMENT '1:enable,0:disable',
 `CREATE_TIME` datetime DEFAULT NULL COMMENT 'create time',
 `MODIFY_TIME` datetime DEFAULT NULL COMMENT 'modify time',
 PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=100000 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- ----------------------------
+-- Table of t_flink_cluster
+-- ----------------------------
+ALTER TABLE `t_flink_cluster`
+CHANGE COLUMN `ADDRESS` `ADDRESS` varchar(255) CHARACTER SET utf8mb4 NOT NULL,
+ADD COLUMN  `CLUSTER_ID` varchar(255) DEFAULT NULL COMMENT 'session模式的clusterId(yarn-session:application-id,k8s-session:cluster-id)',
+ADD COLUMN  `OPTIONS` text COMMENT '参数集合json形式',
+ADD COLUMN  `YARN_QUEUE` varchar(100) DEFAULT NULL COMMENT '任务所在yarn队列',
+ADD COLUMN  `EXECUTION_MODE` tinyint(4) NOT NULL DEFAULT '1' COMMENT 'session类型(1:remote,3:yarn-session,5:kubernetes-session)',
+ADD COLUMN  `VERSION_ID` bigint(20) NOT NULL COMMENT 'flink对应id',
+ADD COLUMN  `K8S_NAMESPACE` varchar(255) DEFAULT 'default' COMMENT 'k8s namespace',
+ADD COLUMN  `SERVICE_ACCOUNT` varchar(50) DEFAULT NULL COMMENT 'k8s service account',
+ADD COLUMN  `USER_ID` bigint(20) DEFAULT NULL,
+ADD COLUMN  `FLINK_IMAGE` varchar(255) DEFAULT NULL COMMENT 'flink使用镜像',
+ADD COLUMN  `DYNAMIC_OPTIONS` text COMMENT '动态参数',
+ADD COLUMN  `K8S_REST_EXPOSED_TYPE` tinyint(4) DEFAULT '2' COMMENT 'k8s 暴露类型(0:LoadBalancer,1:ClusterIP,2:NodePort)',
+ADD COLUMN  `K8S_HADOOP_INTEGRATION` tinyint(4) DEFAULT '0',
+ADD COLUMN  `FLAME_GRAPH` tinyint(4) DEFAULT '0' COMMENT '是否开启火焰图，默认不开启',
+ADD COLUMN  `K8S_CONF` varchar(255) DEFAULT NULL COMMENT 'k8s配置文件所在路径',
+ADD COLUMN  `RESOLVE_ORDER` int(11) DEFAULT NULL,
+ADD COLUMN  `EXCEPTION` text COMMENT '异常信息',
+ADD COLUMN  `CLUSTER_STATE` tinyint(4) DEFAULT '0' COMMENT '集群状态(0:创建未启动,1:已启动,2:停止)',
+ADD UNIQUE INDEX `INX_NAME`(`CLUSTER_NAME`),
+ADD UNIQUE INDEX `INX_CLUSTER`(`CLUSTER_ID`, `ADDRESS`, `EXECUTION_MODE`);
 
 INSERT INTO `t_menu` VALUES (100038, 100000, 'Token Management', '/system/token', 'system/token/Token', 'token:view', 'lock', '0', '1', 1.0, NOW(), NOW());
 INSERT INTO `t_menu` VALUES (100039, 100038, 'add', NULL, NULL, 'token:add', NULL, '1', '1', NULL, NOW(), NULL);
 INSERT INTO `t_menu` VALUES (100040, 100038, 'delete', NULL, NULL, 'token:delete', NULL, '1', '1', NULL, NOW(), NULL);
+INSERT INTO `t_menu` VALUES (100041, 100013, 'Add Cluster', '/flink/setting/add_cluster', 'flink/setting/AddCluster', 'cluster:create', '', '0', '0', null, NOW(), NOW());
+INSERT INTO `t_menu` VALUES (100042, 100013, 'Edit Cluster', '/flink/setting/edit_cluster', 'flink/setting/EditCluster', 'cluster:update', '', '0', '0', null, NOW(), NOW());
 
+INSERT INTO `t_role_menu` VALUES (100057, 100000, 100038);
+INSERT INTO `t_role_menu` VALUES (100058, 100000, 100039);
+INSERT INTO `t_role_menu` VALUES (100059, 100000, 100040);
+INSERT INTO `t_role_menu` VALUES (100060, 100000, 100041);
+INSERT INTO `t_role_menu` VALUES (100061, 100000, 100042);
 
--- ------------------------------------- version: 1.2.3 END ---------------------------------------
+COMMIT;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- ------------------------------------- version: 1.2.4 START ---------------------------------------
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS `t_alert_config`;
+CREATE TABLE `t_alert_config` (
+  `ID`                   bigint   NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `USER_ID`              bigint   DEFAULT NULL,
+  `ALERT_NAME`           varchar(128) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '报警组名称',
+  `ALERT_TYPE`           int DEFAULT 0 COMMENT '报警类型',
+  `EMAIL_PARAMS`         varchar(255) COLLATE utf8mb4_general_ci COMMENT '邮件报警配置信息',
+  `SMS_PARAMS`           text COLLATE utf8mb4_general_ci COMMENT '短信报警配置信息',
+  `DING_TALK_PARAMS`     text COLLATE utf8mb4_general_ci COMMENT '钉钉报警配置信息',
+  `WE_COM_PARAMS`        varchar(255) COLLATE utf8mb4_general_ci COMMENT '企微报警配置信息',
+  `HTTP_CALLBACK_PARAMS` text COLLATE utf8mb4_general_ci COMMENT '报警http回调配置信息',
+  `LARK_PARAMS`          text COLLATE utf8mb4_general_ci COMMENT '飞书报警配置信息',
+  `CREATE_TIME`          datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `MODIFY_TIME`          datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  INDEX `INX_USER_ID` (`USER_ID`) USING BTREE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_general_ci;
+
+BEGIN;
+-- 增加 ALERT_ID 字段
+ALTER TABLE t_flink_app ADD COLUMN ALERT_ID bigint AFTER END_TIME;
+
+-- 转存历史邮件报警配置
+INSERT INTO t_alert_config(USER_ID, ALERT_NAME, ALERT_TYPE, EMAIL_PARAMS)
+SELECT a.USER_ID, concat('emailAlertConf-', (@rownum := @rownum + 1)) AS ALERT_NAME, 1 as ALERT_TYPE, a.ALERT_EMAIL
+from (select USER_ID, ALERT_EMAIL from t_flink_app where ALERT_EMAIL is not null group by USER_ID, ALERT_EMAIL) a,
+     (select @rownum := 0) t;
+
+-- 更新原表邮件配置 id
+UPDATE t_flink_app a INNER JOIN t_alert_config b ON a.ALERT_EMAIL = b.EMAIL_PARAMS
+    SET a.ALERT_ID = b.ID
+WHERE a.ALERT_EMAIL = b.EMAIL_PARAMS;
+
+-- 调整报警配置表 params 内容
+UPDATE t_alert_config
+SET EMAIL_PARAMS     = concat('{"contacts":"', EMAIL_PARAMS, '"}'),
+    DING_TALK_PARAMS = '{}',
+    WE_COM_PARAMS='{}',
+    LARK_PARAMS='{}'
+WHERE ALERT_TYPE = 1;
+-- 删除原 ALERT_EMAIL 字段
+ALTER TABLE t_flink_app DROP COLUMN ALERT_EMAIL;
+
+ALTER TABLE `t_flink_app` ADD COLUMN `OPTION_TIME` datetime DEFAULT NULL AFTER `CREATE_TIME`;
+ALTER TABLE t_setting modify COLUMN `VALUE` text ;
+INSERT INTO `t_setting` VALUES (14, 'docker.register.namespace', NULL, 'Docker Register Image namespace', 'Docker命名空间', 1);
+ALTER TABLE `t_flink_app` ADD COLUMN `INGRESS_TEMPLATE` text COLLATE utf8mb4_general_ci COMMENT 'ingress模版文件';
+ALTER TABLE `t_flink_app` ADD COLUMN `DEFAULT_MODE_INGRESS` text COLLATE utf8mb4_general_ci COMMENT '配置ingress的域名';
+ALTER TABLE `t_flink_app` ADD COLUMN `MODIFY_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER CREATE_TIME;
+COMMIT;
+
+SET FOREIGN_KEY_CHECKS = 1;
+---------------------------------------- version: 1.2.4 END ---------------------------------------

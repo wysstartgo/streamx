@@ -21,12 +21,10 @@ package com.streamxhub.streamx.console.core.task;
 
 import static com.streamxhub.streamx.console.core.enums.FlinkAppState.Bridge.toK8sFlinkJobState;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.google.common.collect.Lists;
 import com.streamxhub.streamx.common.enums.ExecutionMode;
 import com.streamxhub.streamx.console.core.entity.Application;
-import com.streamxhub.streamx.console.core.service.AlertService;
 import com.streamxhub.streamx.console.core.service.ApplicationService;
+import com.streamxhub.streamx.console.core.service.alert.AlertService;
 import com.streamxhub.streamx.flink.kubernetes.FlinkTrkConf;
 import com.streamxhub.streamx.flink.kubernetes.K8sFlinkTrkMonitor;
 import com.streamxhub.streamx.flink.kubernetes.K8sFlinkTrkMonitorFactory;
@@ -34,25 +32,29 @@ import com.streamxhub.streamx.flink.kubernetes.enums.FlinkJobState;
 import com.streamxhub.streamx.flink.kubernetes.enums.FlinkK8sExecuteMode;
 import com.streamxhub.streamx.flink.kubernetes.model.TrkId;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.google.common.collect.Lists;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+
+import javax.annotation.Nonnull;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 import scala.Enumeration;
 
 /**
  * Flink K8s Tracking Monitor Wrapper.
  * <p>
  * todo Notes
- * Currentlty Tracking Monitor of Flink on K8s and on YARN are independent
+ * Currently Tracking Monitor of Flink on K8s and on YARN are independent
  * of each other, this is because the tracking behavior of Flink on K8s is
  * quite difference.
- * Mybe we need to refactor to a unified Flink Tracking Monitor in the
+ * Maybe we need to refactor to a unified Flink Tracking Monitor in the
  * future, both tracking-on-k8s and tracking-on-yarn will exist as plugins
  * for this unified implementation.
  * <p>

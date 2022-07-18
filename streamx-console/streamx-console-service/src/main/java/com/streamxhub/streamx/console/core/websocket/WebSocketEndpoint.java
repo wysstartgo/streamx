@@ -20,6 +20,7 @@
 package com.streamxhub.streamx.console.core.websocket;
 
 import com.streamxhub.streamx.console.core.entity.Message;
+
 import io.undertow.util.CopyOnWriteMap;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
+
 import java.io.IOException;
 import java.util.Map;
 
@@ -52,7 +54,7 @@ public class WebSocketEndpoint {
 
     @OnOpen
     public void onOpen(Session session, @PathParam("id") String id) {
-        log.info("websocket onOpen....");
+        log.debug("websocket onOpen....");
         this.id = id;
         this.session = session;
         SOCKET_SESSIONS.put(id, session);
@@ -60,7 +62,7 @@ public class WebSocketEndpoint {
 
     @OnClose
     public void onClose() throws IOException {
-        log.info("websocket onClose....");
+        log.debug("websocket onClose....");
         this.session.close();
         SOCKET_SESSIONS.remove(this.id);
     }

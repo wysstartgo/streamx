@@ -19,11 +19,6 @@
 
 package com.streamxhub.streamx.console.core.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.streamxhub.streamx.common.util.CommandUtils;
 import com.streamxhub.streamx.common.util.ThreadUtils;
 import com.streamxhub.streamx.common.util.Utils;
@@ -42,6 +37,12 @@ import com.streamxhub.streamx.console.core.service.ApplicationService;
 import com.streamxhub.streamx.console.core.service.ProjectService;
 import com.streamxhub.streamx.console.core.task.FlinkTrackingTask;
 import com.streamxhub.streamx.console.core.websocket.WebSocketEndpoint;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
@@ -86,7 +87,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project>
     @Autowired
     private ApplicationService applicationService;
 
-    private ExecutorService executorService = new ThreadPoolExecutor(
+    private final ExecutorService executorService = new ThreadPoolExecutor(
         Runtime.getRuntime().availableProcessors() * 2,
         200,
         60L,
@@ -220,6 +221,9 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project>
         List<File> apps = new ArrayList<>();
         // 在项目路径下寻找编译完成的tar.gz(StreamX项目)文件或jar(普通,官方标准的flink工程)...
         findTarOrJar(apps, path);
+        if (apps.isEmpty()) {
+            throw new RuntimeException("[StreamX] can't find tar.gz or jar in " + path.getAbsolutePath());
+        }
         for (File app : apps) {
             String appPath = app.getAbsolutePath();
             // 1). tar.gz文件....
@@ -281,9 +285,10 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project>
                 }
                 File target = tar == null ? jar : tar;
                 if (target == null) {
-                    throw new RuntimeException("[StreamX] can't find tar.gz or jar in " + file.getAbsolutePath());
+                    log.warn("[StreamX] can't find tar.gz or jar in {}", file.getAbsolutePath());
+                } else {
+                    list.add(target);
                 }
-                list.add(target);
             }
 
             if (file.isDirectory()) {
@@ -380,7 +385,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project>
                 cloneCommand.setCredentialsProvider(project.getCredentialsProvider());
             }
 
-            Future<Git> future = executorService.submit(() -> cloneCommand.call());
+            Future<Git> future = executorService.submit(cloneCommand);
             Git git = future.get(60, TimeUnit.SECONDS);
 
             StoredConfig config = git.getRepository().getConfig();
@@ -464,7 +469,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project>
      */
     private boolean projectBuild(Project project, String socketId) {
         StringBuilder builder = tailBuffer.get(project.getId());
-        Integer code = CommandUtils.execute(project.getMavenWorkHome(), project.getMavenArgs(), (line) -> {
+        int code = CommandUtils.execute(project.getMavenWorkHome(), project.getMavenArgs(), (line) -> {
             builder.append(line).append("\n");
             if (tailOutMap.containsKey(project.getId())) {
                 if (tailBeginning.containsKey(project.getId())) {

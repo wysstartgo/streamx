@@ -20,6 +20,7 @@
 import com.streamxhub.streamx.console.StreamXConsole;
 import com.streamxhub.streamx.console.core.entity.Application;
 import com.streamxhub.streamx.console.core.service.ApplicationService;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,8 +43,7 @@ public class StreamXConsoleTest {
         application.setSavePointed(false);
         application.setAllowNonRestored(false);
 
-        boolean status = applicationService.start(application, false);
-        System.out.println(status);
+        applicationService.start(application, false);
     }
 
 }

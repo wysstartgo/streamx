@@ -2,10 +2,10 @@
     <br/>
     <h1>
         <a href="http://www.streamxhub.com" target="_blank" rel="noopener noreferrer">
-        <img width="500" src="https://user-images.githubusercontent.com/13284744/142753483-4e96eb33-01ee-469d-ad7c-387e1bf95ee1.png" alt="StreamX logo">
+        <img width="600" src="https://user-images.githubusercontent.com/13284744/166133644-ed3cc4f5-aae5-45bc-bfbe-29c540612446.png" alt="StreamX logo">
         </a>
     </h1>
-    <strong>Make stream processing easier!!!</strong>
+    <strong style="font-size: 1.5rem">Make stream processing easier!!!</strong>
 </div>
 
 <br/>
@@ -27,7 +27,7 @@
 
 </div>
 
-English | [中文](README_CN.md)
+#### English | [中文](README_CN.md)
 
 # StreamX
 
@@ -41,10 +41,8 @@ The original intention of `StreamX` is to make stream processing easier. `Stream
 and tasks. Our ultimate goal is to build a one-stop big data solution integrating stream processing, batch processing, data warehouse and
 data laker.
 
-[![StreamX video](https://user-images.githubusercontent.com/13284744/142747056-d220d69b-7f2a-447d-aeca-bc5435c8e29b.png)](http://assets.streamxhub.com/streamx-video.mp4)
+[![StreamX video](https://user-images.githubusercontent.com/13284744/166101616-50a44d38-3ffb-4296-8a77-92f76a4c21b5.png)](http://assets.streamxhub.com/streamx-video.mp4)
 
-
-![](https://user-images.githubusercontent.com/13284744/142746797-85ebf7b4-4105-4b5b-a023-0689c7fd1d2d.png)
 
 ## 🎉 Features
 
@@ -52,7 +50,9 @@ data laker.
 * Out-of-the-box connectors
 * Support maven compilation
 * Configuration
-* Multi version flink support(1.12.x,1.13.x,1.14.x)
+* Multi version flink support(1.12.x,1.13.x,1.14.x, 1.15.x)
+* Scala 2.11 / 2.12 support
+* restapi support.
 * All Flink deployment mode support(`Remote`/`K8s-Native-Application`/`K8s-Native-Session`/`YARN-Application`/`YARN-Per-Job`/`YARN-Session`)
 * `start`, `stop`, `savepoint`, resume from `savepoint`
 * Various companies and organizations use `StreamX` for production and commercial products.
@@ -62,6 +62,7 @@ data laker.
 * Task backup and rollback
 * Manage dependencies
 * UDF
+* Flink SQL Connector
 * Flink SQL WebIDE
 * Catalog、Hive
 * Full support from task `development` to `deployment`
@@ -121,16 +122,11 @@ respect,Thanks to [Apache Flink](http://flink.apache.org) for creating a great p
 
 ### 🚀 Quick Start
 
-```
-git clone https://github.com/streamxhub/streamx.git
-cd streamx
-./mvnw clean install -DskipTests -Denv=prod
-```
-
 click [Document](http://www.streamxhub.com/zh-CN/docs/intro/) for more information
 
 
-## 💋 out users
+## 💋 our users
+
 
 Various companies and organizations use StreamX for research, production and commercial products. Are you using this project ? [you can add your company](https://github.com/streamxhub/streamx/issues/163)
 
@@ -138,7 +134,17 @@ Various companies and organizations use StreamX for research, production and com
 
 
 
-## 🤝 Contributing
+## 🏆 Our honor
+
+We have received some precious honors, which belong to everyone who contributes to StreamX, Thank you !
+
+
+![](https://user-images.githubusercontent.com/13284744/142746797-85ebf7b4-4105-4b5b-a023-0689c7fd1d2d.png)
+
+![](https://user-images.githubusercontent.com/13284744/174478150-78e078b2-739f-49a3-8d49-d4763a01268f.jpg)
+
+
+## 🤝 Contribution
 
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/streamxhub/streamx/pulls)
 
@@ -146,9 +152,16 @@ You can submit any ideas as [pull requests](https://github.com/streamxhub/stream
 
 > If you're new to posting issues, we ask that you read [*How To Ask Questions The Smart Way*](http://www.catb.org/~esr/faqs/smart-questions.html) (**This guide does not provide actual support services for this project!**), [How to Report Bugs Effectively](http://www.chiark.greenend.org.uk/~sgtatham/bugs.html) prior to posting. Well written bug reports help us help you!
 
-Thanks to [JetBrains](https://www.jetbrains.com/?from=streamx) for supporting us free open source licenses.
+Thank you to all the people who already contributed to StreamX!
 
-[![JetBrains](https://img.alicdn.com/tfs/TB1sSomo.z1gK0jSZLeXXb9kVXa-120-130.svg)](https://www.jetbrains.com/?from=streamx)
+<a href="https://github.com/streamxhub/streamx/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=streamxhub/streamx" />
+</a>
+
+
+## ⏰ Contributor Over Time
+
+[![Contributor Over Time](https://contributor-overtime-api.git-contributor.com/contributors-svg?chart=contributorOverTime&repo=streamxhub/streamx)](https://git-contributor.com?chart=contributorOverTime&repo=streamxhub/streamx)
 
 
 ## 💰 Donation
@@ -161,7 +174,7 @@ If you like this framework, and appreciate the work done for it to exist, you ca
 |:----------|:----------|
 | <img src="https://user-images.githubusercontent.com/13284744/142746857-35e7f823-7160-4505-be3f-e748a2d0a233.png" alt="Buy Me A Coffee" width="150"> | <img src="https://user-images.githubusercontent.com/13284744/142746860-e14a8183-d973-44ca-83bf-e5f9d4da1510.png" alt="Buy Me A Coffee" width="150"> |
 
-## 🏆 My sponsors (Coffee Suppliers)
+## 🏆 Our sponsors (Coffee Suppliers)
 
 ### 💜 Monthly Supplier
 
@@ -189,9 +202,17 @@ Welcome individuals and enterprises to sponsor, your support will help us better
     <a href="https://github.com/zhaizhirui" alt="zhaizhirui"><img src="https://avatars.githubusercontent.com/u/39609947?v=4" height="50" width="50"></a>
 </p>
 
+
+Thanks to [JetBrains](https://www.jetbrains.com/?from=streamx) for supporting us free open source licenses.
+
+[![JetBrains](https://img.alicdn.com/tfs/TB1sSomo.z1gK0jSZLeXXb9kVXa-120-130.svg)](https://www.jetbrains.com/?from=streamx)
+
+
 ### 🏅 Backers
 
 Thank you to all our backers!
+
+---
 
 ## 💬 Join us
 

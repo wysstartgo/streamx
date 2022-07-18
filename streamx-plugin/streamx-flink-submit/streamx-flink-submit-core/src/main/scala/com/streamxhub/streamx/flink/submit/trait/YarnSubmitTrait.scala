@@ -21,7 +21,7 @@ package com.streamxhub.streamx.flink.submit.`trait`
 
 import com.streamxhub.streamx.common.util.ExceptionUtils
 import com.streamxhub.streamx.flink.submit.bean._
-import org.apache.flink.client.deployment.ClusterSpecification
+import org.apache.flink.client.deployment.{ClusterDescriptor, ClusterSpecification, DefaultClusterClientServiceLoader}
 import org.apache.flink.client.program.ClusterClientProvider
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.runtime.jobgraph.JobGraph
@@ -29,21 +29,21 @@ import org.apache.flink.util.FlinkException
 import org.apache.flink.yarn.configuration.YarnConfigOptions
 import org.apache.flink.yarn.{YarnClusterClientFactory, YarnClusterDescriptor}
 import org.apache.hadoop.yarn.api.records.ApplicationId
-
 import java.lang.reflect.Method
 import java.lang.{Boolean => JavaBool}
+import scala.util.Try
 
 /**
  * yarn application mode submit
  */
 trait YarnSubmitTrait extends FlinkSubmitTrait {
 
-  override def doStop(stopRequest: StopRequest, flinkConf: Configuration): StopResponse = {
+  override def doCancel(cancelRequest: CancelRequest, flinkConf: Configuration): CancelResponse = {
 
-    val jobID = getJobID(stopRequest.jobId)
+    val jobID = getJobID(cancelRequest.jobId)
 
     val clusterClient = {
-      flinkConf.safeSet(YarnConfigOptions.APPLICATION_ID, stopRequest.clusterId)
+      flinkConf.safeSet(YarnConfigOptions.APPLICATION_ID, cancelRequest.clusterId)
       val clusterClientFactory = new YarnClusterClientFactory
       val applicationId = clusterClientFactory.getClusterId(flinkConf)
       if (applicationId == null) {
@@ -52,14 +52,12 @@ trait YarnSubmitTrait extends FlinkSubmitTrait {
       val clusterDescriptor = clusterClientFactory.createClusterDescriptor(flinkConf)
       clusterDescriptor.retrieve(applicationId).getClusterClient
     }
-    try {
-      val savepointDir = cancelJob(stopRequest, jobID, clusterClient)
-      StopResponse(savepointDir)
-    } catch {
-      case e: Exception =>
-        val cause = ExceptionUtils.stringifyException(e)
-        throw new FlinkException(s"[StreamX] Triggering a savepoint for the job ${stopRequest.jobId} failed. $cause");
-    }
+    Try {
+      val savepointDir = cancelJob(cancelRequest, jobID, clusterClient)
+      CancelResponse(savepointDir)
+    }.recover {
+      case e => throw new FlinkException(s"[StreamX] Triggering a savepoint for the job ${cancelRequest.jobId} failed. detail: ${ExceptionUtils.stringifyException(e)}");
+    }.get
   }
 
   lazy private val deployInternalMethod: Method = {
@@ -92,4 +90,20 @@ trait YarnSubmitTrait extends FlinkSubmitTrait {
     ).asInstanceOf[ClusterClientProvider[ApplicationId]]
   }
 
+  private[submit] def getSessionClusterDescriptor[T <: ClusterDescriptor[ApplicationId]](flinkConfig: Configuration): (ApplicationId, T) = {
+    val serviceLoader = new DefaultClusterClientServiceLoader
+    val clientFactory = serviceLoader.getClusterClientFactory[ApplicationId](flinkConfig)
+    val yarnClusterId: ApplicationId = clientFactory.getClusterId(flinkConfig)
+    require(yarnClusterId != null)
+    val clusterDescriptor = clientFactory.createClusterDescriptor(flinkConfig).asInstanceOf[T]
+    (yarnClusterId, clusterDescriptor)
+  }
+
+  private[submit] def getSessionClusterDeployDescriptor[T <: ClusterDescriptor[ApplicationId]](flinkConfig: Configuration): (ClusterSpecification, T) = {
+    val serviceLoader = new DefaultClusterClientServiceLoader
+    val clientFactory = serviceLoader.getClusterClientFactory[ApplicationId](flinkConfig)
+    val clusterSpecification = clientFactory.getClusterSpecification(flinkConfig)
+    val clusterDescriptor = clientFactory.createClusterDescriptor(flinkConfig).asInstanceOf[T]
+    (clusterSpecification, clusterDescriptor)
+  }
 }

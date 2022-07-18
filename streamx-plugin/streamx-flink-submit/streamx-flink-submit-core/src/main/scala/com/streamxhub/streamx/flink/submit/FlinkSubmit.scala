@@ -31,24 +31,39 @@ object FlinkSubmit {
       case ExecutionMode.REMOTE => RemoteSubmit.submit(submitInfo)
       case ExecutionMode.YARN_APPLICATION => YarnApplicationSubmit.submit(submitInfo)
       case ExecutionMode.YARN_SESSION => YarnSessionSubmit.submit(submitInfo)
-      case ExecutionMode.YARN_PER_JOB => YarnPreJobSubmit.submit(submitInfo)
+      case ExecutionMode.YARN_PER_JOB => YarnPerJobSubmit.submit(submitInfo)
       case ExecutionMode.KUBERNETES_NATIVE_SESSION => KubernetesNativeSessionSubmit.submit(submitInfo)
       case ExecutionMode.KUBERNETES_NATIVE_APPLICATION => KubernetesNativeApplicationSubmit.submit(submitInfo)
       case _ => throw new UnsupportedOperationException(s"Unsupported ${submitInfo.executionMode} Submit ")
     }
   }
 
-  def stop(stopInfo: StopRequest): StopResponse = {
-    stopInfo.executionMode match {
-      case ExecutionMode.LOCAL => LocalSubmit.stop(stopInfo)
-      case ExecutionMode.REMOTE => RemoteSubmit.stop(stopInfo)
-      case ExecutionMode.YARN_APPLICATION => YarnApplicationSubmit.stop(stopInfo)
-      case ExecutionMode.YARN_SESSION => YarnSessionSubmit.stop(stopInfo)
-      case ExecutionMode.YARN_PER_JOB | ExecutionMode.YARN_SESSION => YarnPreJobSubmit.stop(stopInfo)
-      case ExecutionMode.KUBERNETES_NATIVE_SESSION => KubernetesNativeSessionSubmit.stop(stopInfo)
-      case ExecutionMode.KUBERNETES_NATIVE_APPLICATION => KubernetesNativeApplicationSubmit.stop(stopInfo)
-      case _ => throw new UnsupportedOperationException(s"Unsupported ${stopInfo.executionMode} Submit ")
+  def cancel(cancelRequest: CancelRequest): CancelResponse = {
+    cancelRequest.executionMode match {
+      case ExecutionMode.LOCAL => LocalSubmit.cancel(cancelRequest)
+      case ExecutionMode.REMOTE => RemoteSubmit.cancel(cancelRequest)
+      case ExecutionMode.YARN_APPLICATION => YarnApplicationSubmit.cancel(cancelRequest)
+      case ExecutionMode.YARN_SESSION => YarnSessionSubmit.cancel(cancelRequest)
+      case ExecutionMode.YARN_PER_JOB | ExecutionMode.YARN_SESSION => YarnPerJobSubmit.cancel(cancelRequest)
+      case ExecutionMode.KUBERNETES_NATIVE_SESSION => KubernetesNativeSessionSubmit.cancel(cancelRequest)
+      case ExecutionMode.KUBERNETES_NATIVE_APPLICATION => KubernetesNativeApplicationSubmit.cancel(cancelRequest)
+      case _ => throw new UnsupportedOperationException(s"Unsupported ${cancelRequest.executionMode} Submit ")
     }
   }
 
+  def deploy(deployRequest: DeployRequest): DeployResponse = {
+    deployRequest.executionMode match {
+      case ExecutionMode.YARN_SESSION => YarnSessionSubmit.deploy(deployRequest)
+      case ExecutionMode.KUBERNETES_NATIVE_SESSION => KubernetesNativeSessionSubmit.deploy(deployRequest)
+      case _ => throw new UnsupportedOperationException(s"Unsupported ${deployRequest.executionMode} Submit ")
+    }
+  }
+
+  def shutdown(shutDownRequest: ShutDownRequest): ShutDownResponse = {
+    shutDownRequest.executionMode match {
+      case ExecutionMode.YARN_SESSION => YarnSessionSubmit.shutdown(shutDownRequest)
+      case ExecutionMode.KUBERNETES_NATIVE_SESSION => KubernetesNativeSessionSubmit.shutdown(shutDownRequest)
+      case _ => throw new UnsupportedOperationException(s"Unsupported ${shutDownRequest.executionMode} Submit ")
+    }
+  }
 }

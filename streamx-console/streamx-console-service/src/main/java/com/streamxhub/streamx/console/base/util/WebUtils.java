@@ -19,8 +19,9 @@
 
 package com.streamxhub.streamx.console.base.util;
 
-import com.baomidou.mybatisplus.core.toolkit.StringPool;
 import com.streamxhub.streamx.console.base.domain.Constant;
+
+import com.baomidou.mybatisplus.core.toolkit.StringPool;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -118,5 +119,8 @@ public final class WebUtils {
         return getAppDir("client");
     }
 
+    public static File getAppConfDir(){
+        return getAppDir("conf");
+    }
 }
 

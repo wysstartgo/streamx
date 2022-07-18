@@ -20,6 +20,7 @@
 package com.streamxhub.streamx.flink.submit.`trait`
 
 import com.streamxhub.streamx.common.enums.{ExecutionMode, FlinkK8sRestExposedType}
+import com.streamxhub.streamx.flink.kubernetes.IngressController
 import com.streamxhub.streamx.flink.packer.pipeline.DockerImageBuildResponse
 import com.streamxhub.streamx.flink.submit.bean._
 import org.apache.commons.lang3.StringUtils
@@ -37,8 +38,8 @@ import scala.collection.mutable
 import scala.language.postfixOps
 
 /**
- * kubernetes native mode submit
- */
+  * kubernetes native mode submit
+  */
 //noinspection DuplicatedCode
 trait KubernetesNativeSubmitTrait extends FlinkSubmitTrait {
 
@@ -79,16 +80,16 @@ trait KubernetesNativeSubmitTrait extends FlinkSubmitTrait {
   }
 
   // Tip: Perhaps it would be better to let users freely specify the savepoint directory
-  @throws[Exception] override def doStop(stopRequest: StopRequest, flinkConfig: Configuration): StopResponse = {
+  @throws[Exception] override def doCancel(cancelRequest: CancelRequest, flinkConfig: Configuration): CancelResponse = {
 
     require(
-      StringUtils.isNotBlank(stopRequest.clusterId),
+      StringUtils.isNotBlank(cancelRequest.clusterId),
       s"[flink-submit] stop flink job failed, clusterId is null, mode=${flinkConfig.get(DeploymentOptions.TARGET)}"
     )
 
     flinkConfig
-      .safeSet(KubernetesConfigOptions.CLUSTER_ID, stopRequest.clusterId)
-      .safeSet(KubernetesConfigOptions.NAMESPACE, stopRequest.kubernetesNamespace)
+      .safeSet(KubernetesConfigOptions.CLUSTER_ID, cancelRequest.clusterId)
+      .safeSet(KubernetesConfigOptions.NAMESPACE, cancelRequest.kubernetesNamespace)
 
     var clusterDescriptor: KubernetesClusterDescriptor = null
     var client: ClusterClient[String] = null
@@ -96,12 +97,13 @@ trait KubernetesNativeSubmitTrait extends FlinkSubmitTrait {
     try {
       clusterDescriptor = getK8sClusterDescriptor(flinkConfig)
       client = clusterDescriptor.retrieve(flinkConfig.getString(KubernetesConfigOptions.CLUSTER_ID)).getClusterClient
-      val jobID = JobID.fromHexString(stopRequest.jobId)
-      val actionResult = cancelJob(stopRequest, jobID, client)
-      StopResponse(actionResult)
+      val jobID = JobID.fromHexString(cancelRequest.jobId)
+      val actionResult = cancelJob(cancelRequest, jobID, client)
+      IngressController.deleteIngress(cancelRequest.clusterId, cancelRequest.kubernetesNamespace)
+      CancelResponse(actionResult)
     } catch {
       case e: Exception =>
-        logger.error(s"[flink-submit] stop flink job failed, mode=${flinkConfig.get(DeploymentOptions.TARGET)}, stopRequest=${stopRequest}")
+        logger.error(s"[flink-submit] stop flink job failed, mode=${flinkConfig.get(DeploymentOptions.TARGET)}, cancelRequest=${cancelRequest}")
         throw e
     } finally {
       if (client != null) client.close()
@@ -144,5 +146,10 @@ trait KubernetesNativeSubmitTrait extends FlinkSubmitTrait {
     case FlinkK8sRestExposedType.LoadBalancer => ServiceExposedType.LoadBalancer
     case FlinkK8sRestExposedType.NodePort => ServiceExposedType.NodePort
     case _ => ServiceExposedType.LoadBalancer
+  }
+
+  def getDefaultKubernetesConf(k8sConf: String): String = {
+    if (k8sConf != null) File.separator.concat(k8sConf.replace("~", "root"))
+    else "/root/.kube/conf"
   }
 }

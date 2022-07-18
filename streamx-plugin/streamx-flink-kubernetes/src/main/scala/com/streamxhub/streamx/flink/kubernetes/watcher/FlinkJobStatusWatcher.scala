@@ -24,7 +24,7 @@ import com.streamxhub.streamx.flink.kubernetes.enums.FlinkJobState
 import com.streamxhub.streamx.flink.kubernetes.enums.FlinkK8sExecuteMode.{APPLICATION, SESSION}
 import com.streamxhub.streamx.flink.kubernetes.event.FlinkJobStatusChangeEvent
 import com.streamxhub.streamx.flink.kubernetes.model._
-import com.streamxhub.streamx.flink.kubernetes.{ChangeEventBus, FlinkTrkCachePool, JobStatusWatcherConf, KubernetesRetriever}
+import com.streamxhub.streamx.flink.kubernetes.{ChangeEventBus, FlinkTrkCachePool, IngressController, JobStatusWatcherConf, KubernetesRetriever}
 import io.fabric8.kubernetes.client.Watcher.Action
 import org.apache.hc.client5.http.fluent.Request
 import org.apache.hc.core5.util.Timeout
@@ -117,7 +117,10 @@ class FlinkJobStatusWatcher(conf: JobStatusWatcherConf = JobStatusWatcherConf.de
         val future = Future {
           clusterKey.executeMode match {
             case SESSION => touchSessionJob(clusterKey.clusterId, clusterKey.namespace, trkIds.filter(_.belongTo(clusterKey)).map(_.jobId))
-            case APPLICATION => touchApplicationJob(clusterKey.clusterId, clusterKey.namespace).toArray
+            case APPLICATION =>
+              // scalastyle:off awaitready
+              touchApplicationJob(clusterKey.clusterId, clusterKey.namespace).toArray
+              // scalastyle:on awaitready
           }
         }
         future.filter(_.nonEmpty).foreach {
@@ -147,11 +150,7 @@ class FlinkJobStatusWatcher(conf: JobStatusWatcherConf = JobStatusWatcherConf.de
       })
     // blocking until all future are completed or timeout is reached
     val allFutureHold = Future.sequence(tracksFuture)
-    Try(
-      // scalastyle:off awaitready
-      Await.ready(allFutureHold, conf.sglTrkTaskTimeoutSec seconds)
-      // scalastyle:on awaitready
-    ).failed.map(_ =>
+    Try(Await.ready(allFutureHold, conf.sglTrkTaskTimeoutSec seconds)).failed.map(_ =>
       logInfo(s"[FlinkJobStatusWatcher] tracking flink job status on kubernetes mode timeout," +
         s" limitSeconds=${conf.sglTrkTaskTimeoutSec}," +
         s" trackingClusterKeys=${trkClusterKeys.mkString(",")}"))
@@ -242,6 +241,7 @@ class FlinkJobStatusWatcher(conf: JobStatusWatcherConf = JobStatusWatcherConf.de
       }
       .recover { case ex =>
         logInfo(s"failed to list remote flink jobs on kubernetes-native-mode cluster, errorStack=${ex.getMessage}")
+        IngressController.deleteIngress(clusterKey.clusterId, clusterKey.namespace)
         return None
       }
       .toOption

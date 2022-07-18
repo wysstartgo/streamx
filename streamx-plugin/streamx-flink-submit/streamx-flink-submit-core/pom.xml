@@ -4,7 +4,7 @@
     <parent>
         <groupId>com.streamxhub.streamx</groupId>
         <artifactId>streamx-flink-submit</artifactId>
-        <version>1.2.3</version>
+        <version>1.2.4</version>
     </parent>
 
     <artifactId>streamx-flink-submit-core_${scala.binary.version}</artifactId>
@@ -37,14 +37,14 @@
 
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-kubernetes_${scala.binary.version}</artifactId>
+            <artifactId>flink-kubernetes${scala.binary.flink.version}</artifactId>
             <version>${flink.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.flink</groupId>
-            <artifactId>flink-yarn_${scala.binary.version}</artifactId>
+            <artifactId>flink-yarn${scala.binary.flink.version}</artifactId>
             <version>${flink.version}</version>
             <scope>provided</scope>
         </dependency>

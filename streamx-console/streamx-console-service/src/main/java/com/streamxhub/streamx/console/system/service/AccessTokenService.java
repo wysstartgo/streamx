@@ -19,11 +19,13 @@
 
 package com.streamxhub.streamx.console.system.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.streamxhub.streamx.console.base.domain.RestRequest;
 import com.streamxhub.streamx.console.base.domain.RestResponse;
+import com.streamxhub.streamx.console.base.exception.ServiceException;
 import com.streamxhub.streamx.console.system.entity.AccessToken;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.IService;
 
 public interface AccessTokenService extends IService<AccessToken> {
 
@@ -33,11 +35,16 @@ public interface AccessTokenService extends IService<AccessToken> {
      * @param expireTime
      * @param description
      */
-    RestResponse generateToken(String username, String expireTime, String description);
+    RestResponse generateToken(Long userId, String expireTime, String description) throws ServiceException;
 
     boolean deleteToken(Long id);
 
     IPage<AccessToken> findAccessTokens(AccessToken tokenParam, RestRequest request);
 
-    boolean checkTokenEffective(String username, String token);
+    boolean checkTokenEffective(Long userId, String token);
+
+    RestResponse toggleToken(Long tokenId);
+
+    AccessToken getByUserId(Long userId);
+
 }

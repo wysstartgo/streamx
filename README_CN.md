@@ -2,10 +2,10 @@
     <br/>
     <h1>
         <a href="http://www.streamxhub.com" target="_blank" rel="noopener noreferrer">
-        <img width="500" src="https://user-images.githubusercontent.com/13284744/142753483-4e96eb33-01ee-469d-ad7c-387e1bf95ee1.png" alt="StreamX logo">
+        <img width="600" src="https://user-images.githubusercontent.com/13284744/166133644-ed3cc4f5-aae5-45bc-bfbe-29c540612446.png" alt="StreamX logo">
         </a>
     </h1>
-    <strong>Make stream processing easier!!!</strong>
+    <strong style="font-size: 1.5rem">Make stream processing easier!!!</strong>
 </div>
 
 <br/>
@@ -27,7 +27,7 @@
 
 </div>
 
-[English](README.md) | 中文
+#### [English](README.md) | 中文
 
 # StreamX
 
@@ -41,10 +41,8 @@ Make stream processing easier
 我们将一些好的经验固化下来并结合业内的最佳实践, 通过不断努力终于诞生了今天的框架 —— `StreamX`, 项目的初衷是 —— 让流处理更简单, 使用 `StreamX` 开发, 可以极大降低学习成本和开发门槛, 让开发者只用关心最核心的业务, `StreamX` 规范了项目的配置,
 鼓励函数式编程, 定义了最佳的编程方式, 提供了一系列开箱即用的 `Connectors`, 标准化了配置、开发、测试、部署、监控、运维的整个过程, 提供了 Scala/Java 两套 api, 其最终目的是打造一个一站式大数据平台, 流批一体,湖仓一体的解决方案
 
-[![StreamX video](https://user-images.githubusercontent.com/13284744/142747056-d220d69b-7f2a-447d-aeca-bc5435c8e29b.png)](http://assets.streamxhub.com/streamx-video.mp4)
+[![StreamX video](https://user-images.githubusercontent.com/13284744/166101616-50a44d38-3ffb-4296-8a77-92f76a4c21b5.png)](http://assets.streamxhub.com/streamx-video.mp4)
 
-
-![](https://user-images.githubusercontent.com/13284744/142746797-85ebf7b4-4105-4b5b-a023-0689c7fd1d2d.png)
 
 ## 🎉 Features
 
@@ -53,6 +51,8 @@ Make stream processing easier
 * 支持项目编译功能(maven 编译)
 * 在线参数配置
 * 多版本flink支持(1.12.x,1.13.x,1.14.x)
+* Scala 2.11 / 2.12 支持
+* restapi 支持
 * 快捷的日常操作(任务`启动`、`停止`、`savepoint`，从`savepoint`恢复)
 * Flink所有部署模式的支持(`Remote`/`K8s-Native-Application`/`K8s-Native-Session`/`YARN-Application`/`YARN-Per-Job`/`YARN-Session`)
 * 快捷的日常操作(任务`启动`、`停止`、`savepoint`，从`savepoint`恢复)
@@ -113,15 +113,7 @@ Make stream processing easier
 
 ### 🚀 快速上手
 
-```
-git clone https://github.com/streamxhub/streamx.git
-cd streamx
-mvn clean install -DskipTests -Denv=prod
-```
-
-更多请查看[官网文档](http://www.streamxhub.com/zh/doc/)
-
-
+请查看[官网文档](http://www.streamxhub.com/zh/doc/)了解更多信息
 
 
 ## 💋 谁在使用
@@ -132,8 +124,18 @@ mvn clean install -DskipTests -Denv=prod
 
 
 
+## 🏆 我们的荣誉
 
-## 🤝 如何贡献
+
+我们获得了一些珍贵的荣誉, 这份荣誉属于参加建设 StreamX 的每一位朋友, 谢谢大家!
+
+![](https://user-images.githubusercontent.com/13284744/142746797-85ebf7b4-4105-4b5b-a023-0689c7fd1d2d.png)
+
+
+![](https://user-images.githubusercontent.com/13284744/174478150-78e078b2-739f-49a3-8d49-d4763a01268f.jpg)
+
+
+## 🤝 我要贡献
 
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](https://github.com/streamxhub/streamx/pulls)
 
@@ -141,11 +143,19 @@ mvn clean install -DskipTests -Denv=prod
 
 > 强烈推荐阅读 [《提问的智慧》](https://github.com/ryanhanwu/How-To-Ask-Questions-The-Smart-Way)(**本指南不提供此项目的实际支持服务！**)、[《如何有效地报告 Bug》](http://www.chiark.greenend.org.uk/%7Esgtatham/bugs-cn.html)、[《如何向开源项目提交无法解答的问题》](https://zhuanlan.zhihu.com/p/25795393)，更好的问题更容易获得帮助。
 
-感谢 [JetBrains](https://www.jetbrains.com/?from=streamx) 提供的免费开源 License 赞助
+感谢所有向 StreamX 贡献的朋友!
 
-[![JetBrains](https://img.alicdn.com/tfs/TB1sSomo.z1gK0jSZLeXXb9kVXa-120-130.svg)](https://www.jetbrains.com/?from=streamx)
+<a href="https://github.com/streamxhub/streamx/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=streamxhub/streamx" />
+</a>
 
-## 💰 Donation
+
+## ⏰ Contributor Over Time
+
+[![Contributor Over Time](https://contributor-overtime-api.git-contributor.com/contributors-svg?chart=contributorOverTime&repo=streamxhub/streamx)](https://git-contributor.com?chart=contributorOverTime&repo=streamxhub/streamx)
+
+
+## 💰 我要捐助
 
 Are you **enjoying this project** ? 👋
 
@@ -185,6 +195,12 @@ StreamX现在离这个目标还有一段距离，还需持续投入，相应的�
     <a href="https://github.com/CrazyJugger" alt="leohantaoluo"><img src="https://avatars.githubusercontent.com/u/30514978?v=4" height="50" width="50"></a>
     <a href="https://github.com/zhaizhirui" alt="zhaizhirui"><img src="https://avatars.githubusercontent.com/u/39609947?v=4" height="50" width="50"></a>
 </p>
+
+
+感谢 [JetBrains](https://www.jetbrains.com/?from=streamx) 提供的免费开源 License 赞助
+
+[![JetBrains](https://img.alicdn.com/tfs/TB1sSomo.z1gK0jSZLeXXb9kVXa-120-130.svg)](https://www.jetbrains.com/?from=streamx)
+
 
 ## 💬 加入社区
 

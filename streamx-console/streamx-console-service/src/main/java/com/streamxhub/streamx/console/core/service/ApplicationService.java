@@ -19,11 +19,12 @@
 
 package com.streamxhub.streamx.console.core.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.streamxhub.streamx.console.base.domain.RestRequest;
 import com.streamxhub.streamx.console.core.entity.Application;
 import com.streamxhub.streamx.console.core.enums.AppExistsState;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -44,7 +45,7 @@ public interface ApplicationService extends IService<Application> {
 
     void starting(Application app);
 
-    boolean start(Application app, boolean auto) throws Exception;
+    void start(Application app, boolean auto) throws Exception;
 
     void restart(Application application) throws Exception;
 
@@ -52,7 +53,9 @@ public interface ApplicationService extends IService<Application> {
 
     AppExistsState checkExists(Application app);
 
-    void cancel(Application app);
+    String checkSavepointPath(Application app) throws Exception;
+
+    void cancel(Application app) throws Exception;
 
     void updateTracking(Application application);
 
@@ -88,4 +91,6 @@ public interface ApplicationService extends IService<Application> {
     List<Application> getByProjectId(Long id);
 
     boolean checkBuildAndUpdate(Application app);
+
+    void forcedStop(Application app);
 }

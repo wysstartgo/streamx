@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.streamxhub.streamx.common.enums;
 
 import com.google.common.collect.Lists;
@@ -119,6 +120,10 @@ public enum ExecutionMode implements Serializable {
 
     public static List<Integer> getKubernetesMode() {
         return Lists.newArrayList(KUBERNETES_NATIVE_SESSION.getMode(), KUBERNETES_NATIVE_APPLICATION.getMode());
+    }
+
+    public static boolean isSessionMode(ExecutionMode mode) {
+        return KUBERNETES_NATIVE_SESSION.equals(mode) || YARN_SESSION.equals(mode);
     }
 
     public static boolean isRemoteMode(Integer value) {

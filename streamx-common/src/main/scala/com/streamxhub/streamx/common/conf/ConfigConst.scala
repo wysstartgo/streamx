@@ -112,9 +112,9 @@ object ConfigConst {
 
   val KEY_YARN_APP_ID = "yarn.application.id"
 
-  val KEY_YARN_APP_QUEUE = "yarn.application.queue"
+  val KEY_YARN_APP_NAME = "yarn.application.name"
 
-  val KEY_FLINK_SAVEPOINT_PATH = "execution.savepoint.path"
+  val KEY_YARN_APP_QUEUE = "yarn.application.queue"
 
   // --checkpoints--
   val KEY_FLINK_CHECKPOINTS_ENABLE = "flink.checkpoints.enable"
@@ -134,6 +134,8 @@ object ConfigConst {
   val KEY_FLINK_CHECKPOINTS_MIN_PAUSEBETWEEN = "flink.checkpoints.minPauseBetween"
 
   //---state---
+
+  val KEY_FLINK_STATE_SAVEPOINTS_DIR = "flink.state.savepoints.dir"
 
   val KEY_FLINK_STATE_CHECKPOINTS_DIR = "flink.state.checkpoints.dir"
 
@@ -219,7 +221,7 @@ object ConfigConst {
 
   val KEY_JDBC_INSERT_BATCH = "batch.size"
 
-  val KEY_JDBC_INSERT_BATCH_DELAYTIME = "batch.delaytime"
+  val KEY_JDBC_INSERT_BATCH_DELAYTIME = "batch.delayTime"
 
   val DEFAULT_JDBC_INSERT_BATCH = 1
 
@@ -252,51 +254,6 @@ object ConfigConst {
   val KEY_INFLUX_FLUSH_DURATION = "flush.duration"
 
   /**
-   * about config doris
-   */
-  val DORIS_SINK_PREFIX = "doris.sink"
-  val DORIS_FENODES = "fenodes"
-  val DORIS_DATABASE = "database"
-  val DORIS_TABLE = "table"
-  val DORIS_USER = "user"
-  val DORIS_PASSWORD = "password"
-  val DORIS_BATCHSIZE = "batchSize"
-  val DORIS_DEFAULT_BATCHSIZE = "100"
-  val DORIS_INTERVALMS = "intervalMs"
-  val DORIS_DEFAULT_INTERVALMS = "3000"
-  val DORIS_MAXRETRIES = "maxRetries"
-  val DORIS_DEFAULT_MAXRETRIES = "1"
-  val DORIS_STREAM_LOAD_PROP_PREFIX = "streamLoad."
-
-
-  /**
-   * about config es
-   */
-  val ES_PREFIX = "es.sink."
-
-  val KEY_ES_AUTH_USER = "es.auth.user"
-
-  val KEY_ES_AUTH_PASSWORD = "es.auth.password"
-
-  val KEY_ES_REST_MAX_RETRY = "es.rest.max.retry.timeout"
-
-  val KEY_ES_REST_PATH_PREFIX = "es.rest.path.prefix"
-
-  val KEY_ES_REST_CONTENT_TYPE = "es.rest.content.type"
-
-  val KEY_ES_CONN_REQ_TIME_OUT = "es.connect.request.timeout"
-
-  val KEY_ES_CONN_TIME_OUT = "es.connect.timeout"
-
-  val KEY_ES_CLUSTER_NAME = "es.cluster.name"
-
-  val KEY_ES_BULK_PREFIX = "bulk.flush."
-
-  val KEY_ES_CLIENT_TRANSPORT_SNIFF = "client.transport.sniff"
-
-  val KEY_ES_DISABLE_FLUSH_ONCHECKPOINT = "es.disableFlushOnCheckpoint"
-
-  /**
    * flink config key
    */
   val KEY_FLINK_APPLICATION_ARGS = "$internal.application.program-args"
@@ -316,6 +273,7 @@ object ConfigConst {
   val STREAMX_FLINKSQL_CLIENT_CLASS = "com.streamxhub.streamx.flink.cli.SqlClient"
 
   def printLogo(info: String): Unit = {
+    // scalastyle:off println
     println("\n\n                 .+.                                ")
     println("           _____/ /_________  ____ _____ ___  _  __     ")
     println("          / ___/ __/ ___/ _ \\/ __ `/ __ `__ \\| |/_/   ")
@@ -326,9 +284,10 @@ object ConfigConst {
     println("\n       WebSite:  http://www.streamxhub.com            ")
     println("       GitHub :  https://github.com/streamxhub/streamx  ")
     println("       Gitee  :  https://gitee.com/streamxhub/streamx   ")
-    println("       Ver    :  1.2.3                                  ")
+    println("       Ver    :  1.2.4                                  ")
     println(s"       Info   :  $info                                 ")
     println(s"       Time   :  ${LocalDateTime.now}              \n\n")
+    // scalastyle:on println
   }
 
 }

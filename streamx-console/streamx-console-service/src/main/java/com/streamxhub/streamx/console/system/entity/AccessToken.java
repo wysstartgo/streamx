@@ -26,6 +26,7 @@ import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -34,18 +35,26 @@ import java.util.Date;
 public class AccessToken implements Serializable {
 
     private static final long serialVersionUID = 7187628714679791772L;
-
-    public static final String DEFAULT_PASSWORD = "X-api";
     public static final String DEFAULT_EXPIRE_TIME = "9999-01-01 00:00:00";
+    public static final String IS_API_TOKEN = "is_api_token";
+
+    /**
+     * token状态
+     */
+    public static final Integer STATUS_ENABLE = 1;
+    public static final Integer STATUS_DISABLE = 0;
 
     @TableId(value = "ID", type = IdType.AUTO)
     private Long id;
 
     @NotBlank(message = "{required}")
-    private String username;
+    private Long userId;
 
     @NotBlank(message = "{required}")
     private String token;
+
+    @NotNull(message = "{required}")
+    private Integer status;
 
     @NotNull(message = "{required}")
     private Date expireTime;
@@ -56,6 +65,18 @@ public class AccessToken implements Serializable {
 
     private Date modifyTime;
 
-    private String status;
+    private transient String username;
+
+    private transient String userStatus;
+
+    /**
+     * token最终可用状态  token&user 同时可用 1:可用，0：不可用
+     */
+    private transient Integer finalStatus;
+
+    public AccessToken setStatus(Integer status) {
+        this.status = status;
+        return this;
+    }
 
 }

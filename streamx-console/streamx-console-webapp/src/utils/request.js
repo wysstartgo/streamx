@@ -12,7 +12,7 @@ import {baseUrl} from '@/api/baseUrl'
 const http = axios.create({
   baseURL: baseUrl(),
   withCredentials: false,
-  timeout: 1000 * 5, // 请求超时时间
+  timeout: 1000 * 10, // 请求超时时间
   responseType: 'json',
   validateStatus(status) {
     // 200 外的状态码都认定为失败
@@ -61,7 +61,11 @@ http.interceptors.request.use(config => {
     if (config.method === 'get') {
       data = {params: data}
     } else if (config.headers['Content-Type'] !== 'multipart/form-data') {
-      data = $qs.stringify(data)
+      if (!data.isJsonType){
+        data = $qs.stringify(data)
+      } else { // Content-Type : json
+        data = JSON.stringify(data)
+      }
     }
     return data
   }]
@@ -128,6 +132,15 @@ const respBlob = (content, fileName) => {
 
 const blobTimeout = 1000 * 60 * 10
 export default {
+  postJson(url, data) {
+    data.isJsonType = true
+    console.log('最终提交参数： ' + JSON.stringify(data))
+    return http.post(url, data , {
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8'
+      }
+    })
+  },
   get(url, data = {}) {
     return http.get(url, data)
   },

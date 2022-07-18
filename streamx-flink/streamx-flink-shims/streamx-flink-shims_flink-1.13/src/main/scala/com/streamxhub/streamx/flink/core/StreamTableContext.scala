@@ -26,6 +26,7 @@ import org.apache.flink.table.api.{Schema, StatementSet, Table}
 import org.apache.flink.table.connector.ChangelogMode
 import org.apache.flink.table.descriptors.{ConnectorDescriptor, StreamTableDescriptor}
 import org.apache.flink.table.module.ModuleEntry
+import org.apache.flink.table.sources.TableSource
 import org.apache.flink.table.types.AbstractDataType
 import org.apache.flink.types.Row
 
@@ -107,4 +108,17 @@ class StreamTableContext(override val parameter: ParameterTool,
 
   override def createStatementSet(): StatementSet = tableEnv.createStatementSet()
 
+  @deprecated def fromTableSource(source: TableSource[_]): Table = tableEnv.fromTableSource(source)
+
+  @deprecated def insertInto(table: Table, sinkPath: String, sinkPathContinued: String*): Unit = tableEnv.insertInto(table, sinkPath, sinkPathContinued: _*)
+
+  @deprecated def insertInto(targetPath: String, table: Table): Unit = tableEnv.insertInto(targetPath, table)
+
+  @deprecated def explain(table: Table): String = tableEnv.explain(table)
+
+  @deprecated def explain(table: Table, extended: Boolean): String = tableEnv.explain(table, extended)
+
+  @deprecated def explain(extended: Boolean): String = tableEnv.explain(extended)
+
+  @deprecated def sqlUpdate(stmt: String): Unit = tableEnv.sqlUpdate(stmt)
 }
